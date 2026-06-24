@@ -3,6 +3,8 @@
 [![Test](https://github.com/ag-ui-4j/ag-ui-spring/actions/workflows/test.yml/badge.svg)](https://github.com/ag-ui-4j/ag-ui-spring/actions/workflows/test.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Java](https://img.shields.io/badge/Java-17%2B-orange.svg)](https://adoptium.net/)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ag-ui-4j_ag-ui-spring&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ag-ui-4j_ag-ui-spring)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ag-ui-4j_ag-ui-spring&metric=coverage)](https://sonarcloud.io/summary/new_code?id=ag-ui-4j_ag-ui-spring)
 
 Spring integrations for the [**AG-UI protocol**](https://docs.ag-ui.com), built on
 top of the framework-agnostic [`ag-ui`](https://github.com/ag-ui-4j/ag-ui) Java
@@ -52,8 +54,8 @@ Portal rejects SNAPSHOT dependencies).
 
 - **Java 17+**
 - **Spring Boot 3.4.x** / **Spring AI 1.1.x**
-- The `ag-ui` artifacts (`io.github.ag-ui-4j:core`, `:server`) — released, or built
-  locally with `mvn install`.
+- The `ag-ui` artifacts (`io.github.ag-ui-4j:core`, `:server`) — resolved from
+  Maven Central (currently `0.1.0`; see `ag-ui.version` in the root POM).
 
 ## Quick start
 

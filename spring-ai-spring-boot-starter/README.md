@@ -1,5 +1,7 @@
 # ag-ui-spring · spring-ai-spring-boot-starter
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ag-ui-4j_ag-ui-spring&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ag-ui-4j_ag-ui-spring)
+
 Spring Boot starter that exposes a Spring AI model as an AG-UI agent over an SSE
 endpoint — with **no application code**.
 
