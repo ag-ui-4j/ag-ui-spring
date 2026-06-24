@@ -1,5 +1,7 @@
 # ag-ui-spring · spring-ai
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ag-ui-4j_ag-ui-spring&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ag-ui-4j_ag-ui-spring)
+
 Spring AI integration for the [AG-UI protocol](https://docs.ag-ui.com).
 
 It adapts a Spring AI

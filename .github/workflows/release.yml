@@ -30,14 +30,6 @@ jobs:
       - name: Check out the release tag
         uses: actions/checkout@v4
 
-      # ag-ui-spring depends on the ag-ui artifacts; build them so the reactor
-      # resolves (they must also be on Central for the released POMs to be usable).
-      - name: Check out ag-ui (dependency)
-        uses: actions/checkout@v4
-        with:
-          repository: ag-ui-4j/ag-ui
-          path: ag-ui
-
       - name: Select modules from the tag
         id: select
         run: |
@@ -64,9 +56,7 @@ jobs:
           # Imports the signing key used by the maven-gpg-plugin.
           gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
 
-      - name: Install ag-ui artifacts
-        run: mvn -B -f ag-ui/pom.xml install -DskipTests
-
+      # ag-ui resolves from Maven Central (see <ag-ui.version> in pom.xml).
       # Install the whole reactor so every module is resolvable locally, then
       # deploy only the tagged line.
       - name: Build and install the reactor

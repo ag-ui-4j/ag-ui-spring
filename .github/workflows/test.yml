@@ -15,14 +15,6 @@ jobs:
       - name: Check out ag-ui-spring
         uses: actions/checkout@v4
 
-      # ag-ui-spring depends on the ag-ui artifacts. Until ag-ui is published to
-      # Maven Central, build and install them from source into the local repo.
-      - name: Check out ag-ui (dependency)
-        uses: actions/checkout@v4
-        with:
-          repository: ag-ui-4j/ag-ui
-          path: ag-ui
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -30,8 +22,6 @@ jobs:
           java-version: '17'
           cache: maven
 
-      - name: Install ag-ui artifacts
-        run: mvn -B -f ag-ui/pom.xml install -DskipTests
-
+      # ag-ui resolves from Maven Central (see <ag-ui.version> in pom.xml).
       - name: Build and run tests
         run: mvn -B verify
