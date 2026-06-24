@@ -45,8 +45,17 @@
         <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <ag-ui.version>0.1.0-SNAPSHOT</ag-ui.version>
+        <!-- ag-ui is published to Maven Central, so resolve the release directly. -->
+        <ag-ui.version>0.1.0</ag-ui.version>
         <junit.version>5.10.2</junit.version>
+        <jacoco.version>0.8.13</jacoco.version>
+
+        <!-- SonarQube Cloud (sonarcloud.io). -->
+        <sonar.organization>ag-ui-4j</sonar.organization>
+        <sonar.projectKey>ag-ui-4j_ag-ui-spring</sonar.projectKey>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <!-- Do not run analysis on test sources (no issues raised on test code). -->
+        <sonar.test.exclusions>**/*</sonar.test.exclusions>
 
         <!--
           Internal module versions are managed here rather than via
@@ -128,6 +137,31 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+
+        <plugins>
+            <!-- Produces the per-module coverage report Sonar reads from
+                 target/site/jacoco/jacoco.xml. -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
 
     <profiles>
