@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.github.ag-ui-4j</groupId>
+        <artifactId>ag-ui-spring</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>ag-ui-spring-boot-starter</artifactId>
+    <!-- Tracks the Spring Boot line, like the spring-server module it bundles. -->
+    <version>3.4.0-SNAPSHOT</version>
+
+    <name>ag-ui-spring-boot-starter</name>
+    <description>Spring Boot starter that exposes an AG-UI Agent over an SSE endpoint</description>
+
+    <!--
+      A dependency-only starter: add it and define a single Agent bean to get a
+      working /agent endpoint. The WebFlux server, Jackson serializer and Spring
+      Boot auto-configuration come transitively from ag-ui-spring-server.
+    -->
+    <dependencies>
+        <dependency>
+            <groupId>io.github.ag-ui-4j</groupId>
+            <artifactId>ag-ui-spring-server</artifactId>
+        </dependency>
+    </dependencies>
+</project>

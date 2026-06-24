@@ -1,0 +1,83 @@
+name: Release
+
+# Per-module release. Each independently-versioned line is published on its own
+# tag, so spring-server and spring-ai release on separate cadences:
+#
+#   spring-server-v3.4.0  -> ag-ui-spring-server + ag-ui-spring-boot-starter
+#   spring-ai-v1.1.0      -> ag-ui-spring-ai     + ag-ui-spring-ai-spring-boot-starter
+#
+# Prerequisites:
+#   - The ag-ui artifacts must be available on Maven Central (a non-SNAPSHOT
+#     version): the Central Portal rejects releases that depend on SNAPSHOTs.
+#     Update <ag-ui.version> accordingly.
+#   - The modules being released must carry release (non-SNAPSHOT) versions at the
+#     tagged commit.
+#   - Because ag-ui-spring-ai-spring-boot-starter depends on ag-ui-spring-server,
+#     release the spring-server line before (or together with) the spring-ai line
+#     so the dependency resolves from Central.
+on:
+  push:
+    tags:
+      - 'spring-server-v*'
+      - 'spring-ai-v*'
+
+jobs:
+  publish:
+    name: Publish to Maven Central
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the release tag
+        uses: actions/checkout@v4
+
+      # ag-ui-spring depends on the ag-ui artifacts; build them so the reactor
+      # resolves (they must also be on Central for the released POMs to be usable).
+      - name: Check out ag-ui (dependency)
+        uses: actions/checkout@v4
+        with:
+          repository: ag-ui-4j/ag-ui
+          path: ag-ui
+
+      - name: Select modules from the tag
+        id: select
+        run: |
+          case "${GITHUB_REF_NAME}" in
+            spring-server-v*)
+              echo "projects=spring-server,spring-boot-starter" >> "$GITHUB_OUTPUT" ;;
+            spring-ai-v*)
+              echo "projects=spring-ai,spring-ai-spring-boot-starter" >> "$GITHUB_OUTPUT" ;;
+            *)
+              echo "::error::Unrecognized release tag '${GITHUB_REF_NAME}'"; exit 1 ;;
+          esac
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+          # Configures ~/.m2/settings.xml with a "central" server whose
+          # credentials are read from the env vars below.
+          server-id: central
+          server-username: MAVEN_CENTRAL_USERNAME
+          server-password: MAVEN_CENTRAL_PASSWORD
+          # Imports the signing key used by the maven-gpg-plugin.
+          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+
+      - name: Install ag-ui artifacts
+        run: mvn -B -f ag-ui/pom.xml install -DskipTests
+
+      # Install the whole reactor so every module is resolvable locally, then
+      # deploy only the tagged line.
+      - name: Build and install the reactor
+        run: mvn -B install -DskipTests
+
+      - name: Test the released modules
+        run: mvn -B -pl ${{ steps.select.outputs.projects }} test
+
+      - name: Publish to Maven Central
+        run: mvn -B -Prelease -pl ${{ steps.select.outputs.projects }} deploy -DskipTests
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}

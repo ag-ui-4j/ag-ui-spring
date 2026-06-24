@@ -1,0 +1,97 @@
+# ag-ui-spring
+
+[![Test](https://github.com/ag-ui-4j/ag-ui-spring/actions/workflows/test.yml/badge.svg)](https://github.com/ag-ui-4j/ag-ui-spring/actions/workflows/test.yml)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+[![Java](https://img.shields.io/badge/Java-17%2B-orange.svg)](https://adoptium.net/)
+
+Spring integrations for the [**AG-UI protocol**](https://docs.ag-ui.com), built on
+top of the framework-agnostic [`ag-ui`](https://github.com/ag-ui-4j/ag-ui) Java
+library.
+
+This repository is kept separate so the core `ag-ui` modules stay dependency-light;
+the Spring (and Reactor) dependency tree lives only here.
+
+## Modules
+
+| Module | Artifact | Version line | Description |
+|--------|----------|--------------|-------------|
+| [`spring-server`](spring-server) | `ag-ui-spring-server` | tracks **Spring Boot** (`3.4.x`) | A Spring WebFlux endpoint that streams an `Agent`'s events as Server-Sent Events, a Jackson-backed `Serializer` configured for the AG-UI sealed hierarchies, and Spring Boot auto-configuration. |
+| [`spring-boot-starter`](spring-boot-starter) | `ag-ui-spring-boot-starter` | tracks **Spring Boot** (`3.4.x`) | Drop-in starter over `spring-server`: add it and define one `Agent` bean to get a working `/agent` endpoint. |
+| [`spring-ai`](spring-ai) | `ag-ui-spring-ai` | tracks **Spring AI** (`1.1.x`) | Adapts a Spring AI `ChatClient` into an AG-UI `Agent`, translating its streamed response into the AG-UI event lifecycle. |
+| [`spring-ai-spring-boot-starter`](spring-ai-spring-boot-starter) | `ag-ui-spring-ai-spring-boot-starter` | tracks **Spring AI** (`1.1.x`) | Zero-code starter: auto-registers a `SpringAiAgent` from the auto-configured `ChatClient.Builder` and exposes it at `/agent`. |
+
+## Versioning
+
+The two modules are **versioned and released independently**, because each tracks a
+different framework's compatibility:
+
+- `ag-ui-spring-server` is versioned on the **Spring Boot** line it targets (e.g. `3.4.0`);
+- `ag-ui-spring-ai` is versioned on the **Spring AI** line it targets (e.g. `1.1.0`).
+
+Each module owns its framework BOM in its own pom, so they can be bumped and
+released on separate cadences. The repository's parent pom carries a small,
+stable "platform" version (`0.1.0`) for shared configuration only — it does not
+force the modules into lockstep. Mix and match the versions you need.
+
+### Releasing
+
+Each line is published to Maven Central on its own tag by the `release` workflow:
+
+| Tag | Publishes |
+|-----|-----------|
+| `spring-server-vX.Y.Z` | `ag-ui-spring-server` + `ag-ui-spring-boot-starter` |
+| `spring-ai-vX.Y.Z` | `ag-ui-spring-ai` + `ag-ui-spring-ai-spring-boot-starter` |
+
+The `release` Maven profile flattens each module's POM (inlining the aggregator
+parent), so the lines publish independently. Release the `spring-server` line
+before the `spring-ai` line, since the Spring AI starter depends on the server
+module — and ensure the `ag-ui` artifacts are on Central first (the Central
+Portal rejects SNAPSHOT dependencies).
+
+## Requirements
+
+- **Java 17+**
+- **Spring Boot 3.4.x** / **Spring AI 1.1.x**
+- The `ag-ui` artifacts (`io.github.ag-ui-4j:core`, `:server`) — released, or built
+  locally with `mvn install`.
+
+## Quick start
+
+Pick the starter that matches what you have:
+
+**Expose your own agent** — add `ag-ui-spring-boot-starter` and define one bean:
+
+```java
+@Bean
+Agent agent() {
+    return input -> subscriber -> { /* emit events */ };
+}
+```
+
+**Expose a Spring AI model with no code** — add `ag-ui-spring-ai-spring-boot-starter`
+and a Spring AI model (e.g. `spring-ai-starter-model-openai`). A `SpringAiAgent`
+is auto-registered from the auto-configured `ChatClient.Builder` and served
+automatically.
+
+Either way the endpoint is at `/agent` (override with `ag-ui.server.path`); point
+the [`HttpAgent`](https://github.com/ag-ui-4j/ag-ui/tree/main/client) client at it.
+
+## Building
+
+```bash
+mvn clean install
+```
+
+> Requires the `ag-ui` artifacts in your local repository (or a configured
+> repository) first. Until `ag-ui` is published to Maven Central, run
+> `mvn install` in the `ag-ui` project.
+
+## Contributing
+
+See the organization's
+[Contributing Guide](https://github.com/ag-ui-4j/.github/blob/main/CONTRIBUTING.md)
+and [Code of Conduct](https://github.com/ag-ui-4j/.github/blob/main/CODE_OF_CONDUCT.md).
+
+## License
+
+Licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
