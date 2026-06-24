@@ -19,7 +19,7 @@
 
     <properties>
         <!-- Spring Boot autoconfigure used by this starter's auto-configuration. -->
-        <spring-boot.version>3.4.2</spring-boot.version>
+        <spring-boot.version>4.1.0</spring-boot.version>
     </properties>
 
     <dependencyManagement>
