@@ -9,11 +9,15 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type;
 import org.springframework.context.annotation.Bean;
 
 /**
- * Auto-configuration that exposes the application's {@link Agent} beans as an
- * AG-UI endpoint. It contributes:
+ * Auto-configuration that exposes the application's {@link Agent} beans as a
+ * reactive (WebFlux) AG-UI endpoint. Activated only in a reactive web
+ * application; the Servlet counterpart lives in
+ * {@code ag-ui-spring-webmvc-server}. It contributes:
  *
  * <ul>
  *   <li>a {@link JacksonSerializer} (reusing the application's
@@ -31,6 +35,7 @@ import org.springframework.context.annotation.Bean;
  * To use ids other than bean names, define an {@code AgentRegistry} bean.
  */
 @AutoConfiguration
+@ConditionalOnWebApplication(type = Type.REACTIVE)
 public class AgUiServerAutoConfiguration {
 
     @Bean

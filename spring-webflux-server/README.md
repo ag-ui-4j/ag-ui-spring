@@ -1,4 +1,4 @@
-# ag-ui-spring · spring-server
+# ag-ui-spring · spring-webflux-server
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ag-ui-4j_ag-ui-spring&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ag-ui-4j_ag-ui-spring)
 
@@ -9,6 +9,9 @@ as a reactive `text/event-stream` endpoint and provides the Jackson-based
 `Serializer` the protocol needs. It is wire-compatible with the `HttpAgent`
 client and is the Spring counterpart to the JDK handler in the `ag-ui` `server`
 module.
+
+> Servlet-based app? Use [`ag-ui-spring-webmvc-server`](../spring-webmvc-server)
+> instead — same API, backed by an `SseEmitter`.
 
 ## What's inside
 
@@ -76,7 +79,7 @@ AgUiController controller = new AgUiController(AgentRegistry.of(Map.of("chat", a
 ```xml
 <dependency>
     <groupId>io.github.ag-ui-4j</groupId>
-    <artifactId>ag-ui-spring-server</artifactId>
+    <artifactId>ag-ui-spring-webflux-server</artifactId>
     <version>3.4.0-SNAPSHOT</version>
 </dependency>
 ```

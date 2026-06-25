@@ -10,15 +10,15 @@
         <version>0.1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>ag-ui-spring-server</artifactId>
+    <artifactId>ag-ui-spring-webmvc-server</artifactId>
     <!--
       Independent version: tracks the Spring Boot line this module targets
       (3.4.x). Released separately from ag-ui-spring-ai.
     -->
     <version>3.4.0-SNAPSHOT</version>
 
-    <name>ag-ui-spring-server</name>
-    <description>Spring WebFlux server integration for the AG-UI protocol</description>
+    <name>ag-ui-spring-webmvc-server</name>
+    <description>Spring WebMVC (Servlet) server integration for the AG-UI protocol</description>
 
     <properties>
         <spring-boot.version>3.4.2</spring-boot.version>
@@ -42,16 +42,23 @@
             <artifactId>server</artifactId>
         </dependency>
 
-        <!-- WebFlux brings spring-web, reactor-core and Jackson. -->
+        <!-- WebMVC (Servlet) brings spring-web, spring-webmvc and Jackson. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webflux</artifactId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
         <!-- Auto-configuration support; optional for consumers that wire beans themselves. -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+
+        <!-- MockMvc for the controller test. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

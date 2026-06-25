@@ -104,7 +104,7 @@ Agent agent = SpringAiAgent.builder(chatClient)
         .build();
 ```
 
-Combine with `ag-ui-spring-server` to expose it over HTTP. The
+Combine with `ag-ui-spring-webflux-server` to expose it over HTTP. The
 [`ag-ui-spring-ai-spring-boot-starter`](../spring-ai-spring-boot-starter) does this
 automatically from the auto-configured `ChatClient.Builder`; to customise the
 client, define the `Agent` bean yourself (which overrides the auto-configured

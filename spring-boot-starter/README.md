@@ -7,7 +7,7 @@ Spring Boot starter that exposes an AG-UI
 over an HTTP Server-Sent Events endpoint.
 
 Add this single dependency and define one `Agent` bean — auto-configuration
-(from [`ag-ui-spring-server`](../spring-server)) wires a `Serializer` and the
+(from [`ag-ui-spring-webflux-server`](../spring-webflux-server)) wires a `Serializer` and the
 `/agent` endpoint around it.
 
 ## Usage

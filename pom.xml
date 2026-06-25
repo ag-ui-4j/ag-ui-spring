@@ -35,7 +35,8 @@
     </scm>
 
     <modules>
-        <module>spring-server</module>
+        <module>spring-webflux-server</module>
+        <module>spring-webmvc-server</module>
         <module>spring-boot-starter</module>
         <module>spring-ai</module>
         <module>spring-ai-spring-boot-starter</module>
@@ -63,7 +64,8 @@
           (see the Versioning section of the README). Bump alongside each
           module's own <version>.
         -->
-        <ag-ui-spring-server.version>3.4.0-SNAPSHOT</ag-ui-spring-server.version>
+        <ag-ui-spring-webflux-server.version>3.4.0-SNAPSHOT</ag-ui-spring-webflux-server.version>
+        <ag-ui-spring-webmvc-server.version>3.4.0-SNAPSHOT</ag-ui-spring-webmvc-server.version>
         <ag-ui-spring-ai.version>1.1.0-SNAPSHOT</ag-ui-spring-ai.version>
     </properties>
 
@@ -95,8 +97,13 @@
             <!-- Internal modules (independently versioned). -->
             <dependency>
                 <groupId>io.github.ag-ui-4j</groupId>
-                <artifactId>ag-ui-spring-server</artifactId>
-                <version>${ag-ui-spring-server.version}</version>
+                <artifactId>ag-ui-spring-webflux-server</artifactId>
+                <version>${ag-ui-spring-webflux-server.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.ag-ui-4j</groupId>
+                <artifactId>ag-ui-spring-webmvc-server</artifactId>
+                <version>${ag-ui-spring-webmvc-server.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.github.ag-ui-4j</groupId>

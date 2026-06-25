@@ -5,7 +5,7 @@
 Spring Boot starter that exposes a Spring AI model as an AG-UI agent over an SSE
 endpoint — with **no application code**.
 
-It bundles [`ag-ui-spring-ai`](../spring-ai) and [`ag-ui-spring-server`](../spring-server)
+It bundles [`ag-ui-spring-ai`](../spring-ai) and [`ag-ui-spring-webflux-server`](../spring-webflux-server)
 and adds auto-configuration that registers a `SpringAiAgent` from the
 auto-configured
 [`ChatClient.Builder`](https://docs.spring.io/spring-ai/reference/api/chatclient.html)
