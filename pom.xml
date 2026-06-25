@@ -45,9 +45,8 @@
         <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <!-- TEMPORARY: AgentRegistry (multi-agent routing) is unreleased. Pin to the
-             0.2.0 release once ag-ui 0.2.0 is published to Maven Central. -->
-        <ag-ui.version>0.2.0-SNAPSHOT</ag-ui.version>
+        <!-- ag-ui is published to Maven Central, so resolve the release directly. -->
+        <ag-ui.version>0.2.0</ag-ui.version>
         <junit.version>5.10.2</junit.version>
         <jacoco.version>0.8.13</jacoco.version>
 
