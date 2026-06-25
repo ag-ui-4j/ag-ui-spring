@@ -3,25 +3,32 @@ package io.github.agui4j.spring.server;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.agui4j.core.agent.Agent;
 import io.github.agui4j.core.serialization.Serializer;
+import io.github.agui4j.server.AgentRegistry;
+import java.util.Map;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.beans.factory.ObjectProvider;
 
 /**
- * Auto-configuration that exposes a configured {@link Agent} as an AG-UI
- * endpoint. It contributes:
+ * Auto-configuration that exposes the application's {@link Agent} beans as an
+ * AG-UI endpoint. It contributes:
  *
  * <ul>
  *   <li>a {@link JacksonSerializer} (reusing the application's
  *       {@link ObjectMapper} if one is present) when no {@link Serializer} bean
- *       exists; and</li>
- *   <li>an {@link AgUiController} when an {@link Agent} bean is present.</li>
+ *       exists;</li>
+ *   <li>a default {@link AgentRegistry} keyed by <em>bean name</em> from all
+ *       {@link Agent} beans, unless the application defines its own
+ *       {@link AgentRegistry} bean (for friendly ids); and</li>
+ *   <li>an {@link AgUiController} when an {@link AgentRegistry} is available.</li>
  * </ul>
  *
- * <p>A consumer therefore only needs to define a single {@code Agent} bean to
- * obtain a working {@code /agent} endpoint.
+ * <p>So defining a single {@code Agent} bean named {@code chat} yields a working
+ * {@code /agent/chat} endpoint (and {@code /agent} as the single-agent alias),
+ * while several {@code Agent} beans are each reachable at {@code /agent/{beanName}}.
+ * To use ids other than bean names, define an {@code AgentRegistry} bean.
  */
 @AutoConfiguration
 public class AgUiServerAutoConfiguration {
@@ -35,8 +42,15 @@ public class AgUiServerAutoConfiguration {
 
     @Bean
     @ConditionalOnBean(Agent.class)
+    @ConditionalOnMissingBean(AgentRegistry.class)
+    public AgentRegistry agUiAgentRegistry(Map<String, Agent> agents) {
+        return AgentRegistry.of(agents);
+    }
+
+    @Bean
+    @ConditionalOnBean(AgentRegistry.class)
     @ConditionalOnMissingBean(AgUiController.class)
-    public AgUiController agUiController(Agent agent, Serializer serializer) {
-        return new AgUiController(agent, serializer);
+    public AgUiController agUiController(AgentRegistry registry, Serializer serializer) {
+        return new AgUiController(registry, serializer);
     }
 }

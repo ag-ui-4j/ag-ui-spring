@@ -14,9 +14,9 @@ module.
 
 | Type | Purpose |
 |------|---------|
-| [`AgUiController`](src/main/java/io/github/agui4j/spring/server/AgUiController.java) | WebFlux `@RestController` that accepts a `RunAgentInput` POST and streams the agent's events as Server-Sent Events. Endpoint path defaults to `/agent` (override with `ag-ui.server.path`). |
+| [`AgUiController`](src/main/java/io/github/agui4j/spring/server/AgUiController.java) | WebFlux `@RestController` that accepts a `RunAgentInput` POST and streams the agent's events as Server-Sent Events. Routes `/agent/{id}` to an agent from an `AgentRegistry` (single-agent alias on the base path; unknown id → `404`). Base path defaults to `/agent` (override with `ag-ui.server.path`). |
 | [`JacksonSerializer`](src/main/java/io/github/agui4j/spring/server/JacksonSerializer.java) | A `Serializer` backed by Jackson, configured to handle the sealed `Event` (by `type`) and `Message` (by `role`) hierarchies polymorphically, with `Role`/`EventType` bound to their wire values. |
-| [`AgUiServerAutoConfiguration`](src/main/java/io/github/agui4j/spring/server/AgUiServerAutoConfiguration.java) | Spring Boot auto-configuration: contributes a `Serializer` (reusing the app's `ObjectMapper`) and the controller when an `Agent` bean is present. |
+| [`AgUiServerAutoConfiguration`](src/main/java/io/github/agui4j/spring/server/AgUiServerAutoConfiguration.java) | Spring Boot auto-configuration: contributes a `Serializer` (reusing the app's `ObjectMapper`), a default `AgentRegistry` keyed by **bean name** from all `Agent` beans, and the controller. |
 
 ## Usage
 
@@ -36,11 +36,32 @@ class AgUiConfig {
 Malformed input is rejected with `400 Bad Request`; run failures are surfaced in
 band as a terminal `RUN_ERROR` event.
 
+### Multiple agents
+
+Define several `Agent` beans; each is reachable at `/agent/{beanName}`, and an
+unknown id returns `404`:
+
+```java
+@Bean Agent weather() { … }   // POST /agent/weather
+@Bean Agent support() { … }   // POST /agent/support
+```
+
+With exactly one agent, the bare `/agent` path still works (alias). To use ids
+other than bean names, define your own `AgentRegistry` bean — it overrides the
+default:
+
+```java
+@Bean
+AgentRegistry agents(Agent weather, Agent support) {
+    return AgentRegistry.of(Map.of("weather", weather, "support", support));
+}
+```
+
 ### Wiring manually (without auto-configuration)
 
 ```java
 Serializer serializer = new JacksonSerializer(objectMapper);
-AgUiController controller = new AgUiController(agent, serializer);
+AgUiController controller = new AgUiController(AgentRegistry.of(Map.of("chat", agent)), serializer);
 ```
 
 ## Notes
