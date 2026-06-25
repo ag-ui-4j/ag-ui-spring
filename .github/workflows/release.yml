@@ -3,8 +3,8 @@ name: Release
 # Per-module release. Each independently-versioned line is published on its own
 # tag, so the server and spring-ai lines release on separate cadences:
 #
-#   spring-webflux-server-v3.4.0 -> ag-ui-spring-webflux-server + ag-ui-spring-boot-starter
-#   spring-webmvc-server-v3.4.0  -> ag-ui-spring-webmvc-server
+#   spring-webflux-server-v3.4.0 -> ag-ui-spring-webflux-server + ag-ui-spring-webflux-boot-starter
+#   spring-webmvc-server-v3.4.0  -> ag-ui-spring-webmvc-server + ag-ui-spring-webmvc-boot-starter
 #   spring-ai-v1.1.0             -> ag-ui-spring-ai + ag-ui-spring-ai-spring-boot-starter
 #
 # Prerequisites:
@@ -37,9 +37,9 @@ jobs:
         run: |
           case "${GITHUB_REF_NAME}" in
             spring-webflux-server-v*)
-              echo "projects=spring-webflux-server,spring-boot-starter" >> "$GITHUB_OUTPUT" ;;
+              echo "projects=spring-webflux-server,spring-webflux-boot-starter" >> "$GITHUB_OUTPUT" ;;
             spring-webmvc-server-v*)
-              echo "projects=spring-webmvc-server" >> "$GITHUB_OUTPUT" ;;
+              echo "projects=spring-webmvc-server,spring-webmvc-boot-starter" >> "$GITHUB_OUTPUT" ;;
             spring-ai-v*)
               echo "projects=spring-ai,spring-ai-spring-boot-starter" >> "$GITHUB_OUTPUT" ;;
             *)

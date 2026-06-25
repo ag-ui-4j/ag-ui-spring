@@ -37,7 +37,8 @@
     <modules>
         <module>spring-webflux-server</module>
         <module>spring-webmvc-server</module>
-        <module>spring-boot-starter</module>
+        <module>spring-webflux-boot-starter</module>
+        <module>spring-webmvc-boot-starter</module>
         <module>spring-ai</module>
         <module>spring-ai-spring-boot-starter</module>
     </modules>

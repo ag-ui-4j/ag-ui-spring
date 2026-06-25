@@ -1,21 +1,22 @@
-# ag-ui-spring · spring-boot-starter
+# ag-ui-spring · spring-webflux-boot-starter
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ag-ui-4j_ag-ui-spring&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ag-ui-4j_ag-ui-spring)
 
 Spring Boot starter that exposes an AG-UI
 [`Agent`](https://github.com/ag-ui-4j/ag-ui/blob/main/core/src/main/java/io/github/agui4j/core/agent/Agent.java)
-over an HTTP Server-Sent Events endpoint.
+over a reactive (**WebFlux**) HTTP Server-Sent Events endpoint.
 
 Add this single dependency and define one `Agent` bean — auto-configuration
 (from [`ag-ui-spring-webflux-server`](../spring-webflux-server)) wires a `Serializer` and the
-`/agent` endpoint around it.
+`/agent` endpoint around it. For a Servlet (WebMVC) app, use
+[`ag-ui-spring-webmvc-boot-starter`](../spring-webmvc-boot-starter) instead.
 
 ## Usage
 
 ```xml
 <dependency>
     <groupId>io.github.ag-ui-4j</groupId>
-    <artifactId>ag-ui-spring-boot-starter</artifactId>
+    <artifactId>ag-ui-spring-webflux-boot-starter</artifactId>
     <version>3.4.0-SNAPSHOT</version>
 </dependency>
 ```
