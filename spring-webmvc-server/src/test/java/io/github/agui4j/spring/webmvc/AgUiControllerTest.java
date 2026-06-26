@@ -1,6 +1,7 @@
 package io.github.agui4j.spring.webmvc;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -12,6 +13,7 @@ import io.github.agui4j.core.agent.RunAgentInput;
 import io.github.agui4j.core.event.Event;
 import io.github.agui4j.core.event.RunFinishedEvent;
 import io.github.agui4j.core.event.RunStartedEvent;
+import io.github.agui4j.core.serialization.SerializationException;
 import io.github.agui4j.core.serialization.Serializer;
 import io.github.agui4j.server.AgentRegistry;
 import java.util.List;
@@ -81,6 +83,73 @@ class AgUiControllerTest {
                 "b", syncAgent(new RunFinishedEvent("t1", "r1")))), SERIALIZER);
 
         assertThrows(AgentNotFoundException.class, () -> many.runDefault("{}"));
+    }
+
+    @Test
+    void runErrorEventEmittedInBandWhenAgentFails() throws Exception {
+        AgUiController controller = new AgUiController(AgentRegistry.of(Map.of(
+                "x", syncErroringAgent(new RuntimeException("boom")))), SERIALIZER);
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
+                .addPlaceholderValue("ag-ui.server.path", "/agent").build();
+
+        MvcResult result = mvc.perform(post("/agent/x")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.TEXT_EVENT_STREAM)
+                        .content("{}"))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(content().string(Matchers.containsString("RUN_ERROR")));
+    }
+
+    @Test
+    void runErrorFallsBackToExceptionTypeWhenMessageIsNull() throws Exception {
+        AgUiController controller = new AgUiController(AgentRegistry.of(Map.of(
+                "x", syncErroringAgent(new IllegalStateException()))), SERIALIZER);
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
+                .addPlaceholderValue("ag-ui.server.path", "/agent").build();
+
+        MvcResult result = mvc.perform(post("/agent/x")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.TEXT_EVENT_STREAM)
+                        .content("{}"))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(content().string(Matchers.containsString("RUN_ERROR")));
+    }
+
+    @Test
+    void exceptionHandlersReturnDescriptiveMessages() {
+        AgUiController controller = new AgUiController(AgentRegistry.of(Map.of()), SERIALIZER);
+
+        assertTrue(controller.onUnknownAgent(AgentNotFoundException.byId("ghost")).contains("ghost"));
+        assertTrue(controller.onMalformedRequest(new SerializationException("bad json")).contains("bad json"));
+    }
+
+    /** Signals onError synchronously when the subscriber requests. */
+    private static Agent syncErroringAgent(Throwable error) {
+        return input -> subscriber -> subscriber.onSubscribe(new Flow.Subscription() {
+            private boolean served;
+
+            @Override
+            public void request(long n) {
+                if (served) {
+                    return;
+                }
+                served = true;
+                subscriber.onError(error);
+            }
+
+            @Override
+            public void cancel() {
+                // no-op
+            }
+        });
     }
 
     /** Emits a single event synchronously when the subscriber requests, then completes. */

@@ -2,12 +2,14 @@ package io.github.agui4j.spring.server;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.agui4j.core.agent.Agent;
 import io.github.agui4j.core.agent.RunAgentInput;
 import io.github.agui4j.core.event.Event;
 import io.github.agui4j.core.event.RunFinishedEvent;
 import io.github.agui4j.core.event.RunStartedEvent;
+import io.github.agui4j.core.serialization.SerializationException;
 import io.github.agui4j.core.serialization.Serializer;
 import io.github.agui4j.server.AgentRegistry;
 import java.time.Duration;
@@ -75,6 +77,38 @@ class AgUiControllerTest {
                 "b", agentEmitting(new RunFinishedEvent("t1", "r1")))), SERIALIZER);
 
         assertThrows(AgentNotFoundException.class, () -> many.runDefault("{}"));
+    }
+
+    @Test
+    void runErrorEventEmittedInBandWhenAgentFails() {
+        Agent failing = input -> subscriber -> {
+            SubmissionPublisher<Event> publisher = new SubmissionPublisher<>();
+            publisher.subscribe(subscriber);
+            publisher.closeExceptionally(new RuntimeException("boom"));
+        };
+        AgUiController controller = new AgUiController(AgentRegistry.of(Map.of("x", failing)), SERIALIZER);
+
+        assertEquals(List.of("RUN_ERROR"), data(controller.run("x", "{}")));
+    }
+
+    @Test
+    void runErrorFallsBackToExceptionTypeWhenMessageIsNull() {
+        Agent failing = input -> subscriber -> {
+            SubmissionPublisher<Event> publisher = new SubmissionPublisher<>();
+            publisher.subscribe(subscriber);
+            publisher.closeExceptionally(new IllegalStateException()); // null message
+        };
+        AgUiController controller = new AgUiController(AgentRegistry.of(Map.of("x", failing)), SERIALIZER);
+
+        assertEquals(List.of("RUN_ERROR"), data(controller.run("x", "{}")));
+    }
+
+    @Test
+    void exceptionHandlersReturnDescriptiveMessages() {
+        AgUiController controller = new AgUiController(AgentRegistry.of(Map.of()), SERIALIZER);
+
+        assertTrue(controller.onUnknownAgent(AgentNotFoundException.byId("ghost")).contains("ghost"));
+        assertTrue(controller.onMalformedRequest(new SerializationException("bad json")).contains("bad json"));
     }
 
     private static List<String> data(Flux<ServerSentEvent<String>> flux) {

@@ -2,11 +2,14 @@ package io.github.agui4j.spring.server;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.agui4j.core.agent.RunAgentInput;
 import io.github.agui4j.core.event.Event;
+import io.github.agui4j.core.event.EventType;
 import io.github.agui4j.core.event.TextMessageStartEvent;
+import io.github.agui4j.core.serialization.SerializationException;
 import io.github.agui4j.core.message.AssistantMessage;
 import io.github.agui4j.core.message.Message;
 import io.github.agui4j.core.message.Role;
@@ -80,5 +83,39 @@ class JacksonSerializerTest {
         assertTrue(tool.parameters().properties().isEmpty());
         assertTrue(tool.parameters().required().isEmpty());
         assertEquals("object", tool.parameters().type());
+    }
+
+    @Test
+    void deserializeListRoundTripsPolymorphicMessages() {
+        String json = "[{\"role\":\"user\",\"id\":\"m1\",\"content\":\"hi\"},"
+                + "{\"role\":\"assistant\",\"id\":\"m2\",\"content\":\"yo\"}]";
+
+        List<Message> messages = serializer.deserializeList(json, Message.class);
+
+        assertEquals(2, messages.size());
+        assertInstanceOf(UserMessage.class, messages.get(0));
+        assertInstanceOf(AssistantMessage.class, messages.get(1));
+    }
+
+    @Test
+    void eventTypeRoundTripsThroughItsWireValue() {
+        assertEquals("\"CUSTOM\"", serializer.serialize(EventType.CUSTOM));
+        assertEquals(EventType.RUN_STARTED, serializer.deserialize("\"RUN_STARTED\"", EventType.class));
+    }
+
+    @Test
+    void serializeWrapsFailuresInSerializationException() {
+        // A bean with no serializable properties trips Jackson's FAIL_ON_EMPTY_BEANS.
+        assertThrows(SerializationException.class, () -> serializer.serialize(new Object()));
+    }
+
+    @Test
+    void deserializeWrapsFailuresInSerializationException() {
+        assertThrows(SerializationException.class, () -> serializer.deserialize("not json", Event.class));
+    }
+
+    @Test
+    void deserializeListWrapsFailuresInSerializationException() {
+        assertThrows(SerializationException.class, () -> serializer.deserializeList("not json", Message.class));
     }
 }
