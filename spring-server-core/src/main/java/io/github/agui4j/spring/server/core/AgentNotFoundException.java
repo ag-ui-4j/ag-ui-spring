@@ -1,8 +1,8 @@
-package io.github.agui4j.spring.webmvc;
+package io.github.agui4j.spring.server.core;
 
 /**
- * Thrown when a request addresses an agent id that is not registered. The
- * {@link AgUiController} maps this to {@code 404 Not Found}.
+ * Thrown when a request addresses an agent id that is not registered. Each
+ * server module's controller maps this to {@code 404 Not Found}.
  */
 public class AgentNotFoundException extends RuntimeException {
 

@@ -7,6 +7,7 @@ import io.github.agui4j.core.event.RunErrorEvent;
 import io.github.agui4j.core.serialization.SerializationException;
 import io.github.agui4j.core.serialization.Serializer;
 import io.github.agui4j.server.AgentRegistry;
+import io.github.agui4j.spring.server.core.AgentNotFoundException;
 import java.util.Objects;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;

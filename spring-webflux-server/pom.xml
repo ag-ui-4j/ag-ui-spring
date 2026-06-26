@@ -37,9 +37,10 @@
     </dependencyManagement>
 
     <dependencies>
+        <!-- Shared serializer, mix-ins and AgentNotFoundException; brings ag-ui server transitively. -->
         <dependency>
             <groupId>io.github.ag-ui-4j</groupId>
-            <artifactId>server</artifactId>
+            <artifactId>ag-ui-spring-server-core</artifactId>
         </dependency>
 
         <!-- WebFlux brings spring-web, reactor-core and Jackson. -->

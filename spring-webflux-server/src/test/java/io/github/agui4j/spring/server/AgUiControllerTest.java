@@ -12,6 +12,7 @@ import io.github.agui4j.core.event.RunStartedEvent;
 import io.github.agui4j.core.serialization.SerializationException;
 import io.github.agui4j.core.serialization.Serializer;
 import io.github.agui4j.server.AgentRegistry;
+import io.github.agui4j.spring.server.core.AgentNotFoundException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;

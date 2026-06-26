@@ -1,4 +1,4 @@
-package io.github.agui4j.spring.server;
+package io.github.agui4j.spring.server.core;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -9,11 +9,11 @@ import io.github.agui4j.core.agent.RunAgentInput;
 import io.github.agui4j.core.event.Event;
 import io.github.agui4j.core.event.EventType;
 import io.github.agui4j.core.event.TextMessageStartEvent;
-import io.github.agui4j.core.serialization.SerializationException;
 import io.github.agui4j.core.message.AssistantMessage;
 import io.github.agui4j.core.message.Message;
 import io.github.agui4j.core.message.Role;
 import io.github.agui4j.core.message.UserMessage;
+import io.github.agui4j.core.serialization.SerializationException;
 import io.github.agui4j.core.tool.Tool;
 import java.util.List;
 import org.junit.jupiter.api.Test;

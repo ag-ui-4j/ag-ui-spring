@@ -1,4 +1,4 @@
-package io.github.agui4j.spring.server.jackson;
+package io.github.agui4j.spring.server.core.jackson;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;

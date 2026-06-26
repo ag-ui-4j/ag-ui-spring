@@ -1,4 +1,4 @@
-package io.github.agui4j.spring.webmvc;
+package io.github.agui4j.spring.server.core;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -16,8 +16,8 @@ import io.github.agui4j.core.message.Message;
 import io.github.agui4j.core.message.Role;
 import io.github.agui4j.core.serialization.SerializationException;
 import io.github.agui4j.core.serialization.Serializer;
-import io.github.agui4j.spring.webmvc.jackson.EventMixin;
-import io.github.agui4j.spring.webmvc.jackson.MessageMixin;
+import io.github.agui4j.spring.server.core.jackson.EventMixin;
+import io.github.agui4j.spring.server.core.jackson.MessageMixin;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
@@ -31,6 +31,8 @@ import java.util.Objects;
  *
  * <p>The configuration is applied to a copy of the supplied mapper, so passing
  * Spring's shared {@code ObjectMapper} does not mutate it.
+ *
+ * <p>Shared by the WebFlux and WebMVC server modules.
  */
 public final class JacksonSerializer implements Serializer {
 

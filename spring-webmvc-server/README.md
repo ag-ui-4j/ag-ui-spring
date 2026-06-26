@@ -16,8 +16,10 @@ reactive. Both are wire-compatible with the `HttpAgent` client.
 | Type | Purpose |
 |------|---------|
 | [`AgUiController`](src/main/java/io/github/agui4j/spring/webmvc/AgUiController.java) | WebMVC `@RestController` that accepts a `RunAgentInput` POST and streams the agent's events as Server-Sent Events via an `SseEmitter`. Routes `/agent/{id}` to an agent from an `AgentRegistry` (single-agent alias on the base path; unknown id → `404`). Base path defaults to `/agent` (override with `ag-ui.server.path`). |
-| [`JacksonSerializer`](src/main/java/io/github/agui4j/spring/webmvc/JacksonSerializer.java) | A `Serializer` backed by Jackson, configured to handle the sealed `Event` (by `type`) and `Message` (by `role`) hierarchies polymorphically. |
 | [`AgUiServerAutoConfiguration`](src/main/java/io/github/agui4j/spring/webmvc/AgUiServerAutoConfiguration.java) | Spring Boot auto-configuration (active only in a **Servlet** web app): contributes a `Serializer`, a default `AgentRegistry` keyed by **bean name** from all `Agent` beans, and the controller. |
+
+The Jackson-backed `Serializer` (`JacksonSerializer`) and `AgentNotFoundException`
+come from [`spring-server-core`](../spring-server-core), shared with the WebFlux server.
 
 ## Usage
 

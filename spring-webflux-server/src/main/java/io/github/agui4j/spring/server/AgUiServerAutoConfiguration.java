@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.agui4j.core.agent.Agent;
 import io.github.agui4j.core.serialization.Serializer;
 import io.github.agui4j.server.AgentRegistry;
+import io.github.agui4j.spring.server.core.JacksonSerializer;
 import java.util.Map;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
