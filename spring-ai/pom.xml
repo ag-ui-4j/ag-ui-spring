@@ -15,13 +15,13 @@
       Independent version: tracks the Spring AI line this module targets (1.1.x).
       Released separately from ag-ui-spring-server.
     -->
-    <version>1.1.0-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
 
     <name>ag-ui-spring-ai</name>
     <description>Spring AI integration for the AG-UI protocol</description>
 
     <properties>
-        <spring-ai.version>1.1.2</spring-ai.version>
+        <spring-ai.version>2.0.0</spring-ai.version>
         <!-- Reactor train matching the Spring AI / Spring 6.2 line. -->
         <reactor-bom.version>2024.0.12</reactor-bom.version>
     </properties>

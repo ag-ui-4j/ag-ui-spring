@@ -15,13 +15,13 @@
       Independent version: tracks the Spring Boot line this module targets
       (3.4.x). Released separately from ag-ui-spring-ai.
     -->
-    <version>3.4.0-SNAPSHOT</version>
+    <version>4.1.0-SNAPSHOT</version>
 
     <name>ag-ui-spring-webflux-server</name>
     <description>Spring WebFlux server integration for the AG-UI protocol</description>
 
     <properties>
-        <spring-boot.version>3.4.2</spring-boot.version>
+        <spring-boot.version>4.1.0</spring-boot.version>
     </properties>
 
     <dependencyManagement>

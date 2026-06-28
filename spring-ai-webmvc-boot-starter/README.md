@@ -1,23 +1,29 @@
-# ag-ui-spring · spring-ai-spring-boot-starter
+# ag-ui-spring · spring-ai-webmvc-boot-starter
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ag-ui-4j_ag-ui-spring&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ag-ui-4j_ag-ui-spring)
 
-Spring Boot starter that exposes a Spring AI model as an AG-UI agent over an SSE
-endpoint — with **no application code**.
+Spring Boot starter that exposes a Spring AI model as an AG-UI agent over a
+**Servlet (WebMVC)** SSE endpoint — with **no application code**.
 
-It bundles [`ag-ui-spring-ai`](../spring-ai) and [`ag-ui-spring-webflux-server`](../spring-webflux-server)
-and adds auto-configuration that registers a `SpringAiAgent` from the
-auto-configured
+It is the servlet counterpart of
+[`ag-ui-spring-ai-spring-boot-starter`](../spring-ai-spring-boot-starter) (which
+uses the reactive WebFlux server). It bundles [`ag-ui-spring-ai`](../spring-ai) and
+[`ag-ui-spring-webmvc-server`](../spring-webmvc-server) (an `SseEmitter`-backed
+`/agent` endpoint) and adds auto-configuration that registers a `SpringAiAgent`
+from the auto-configured
 [`ChatClient.Builder`](https://docs.spring.io/spring-ai/reference/api/chatclient.html)
 (Spring AI provides one whenever a chat model is on the classpath), then lets the
 server auto-configuration expose it.
+
+Use this starter for a traditional servlet stack (Tomcat); use the WebFlux starter
+for a reactive (Netty) stack. Add **one** of the two, not both.
 
 ## Usage
 
 ```xml
 <dependency>
     <groupId>io.github.ag-ui-4j</groupId>
-    <artifactId>ag-ui-spring-ai-spring-boot-starter</artifactId>
+    <artifactId>ag-ui-spring-ai-webmvc-boot-starter</artifactId>
     <version>2.0.0-SNAPSHOT</version>
 </dependency>
 ```
@@ -32,7 +38,7 @@ a `ChatClient.Builder` bean is auto-configured by Spring AI; this starter builds
 | Condition | Result |
 |-----------|--------|
 | A `ChatClient.Builder` bean exists and no `Agent` bean is defined | a `SpringAiAgent` `Agent` bean is registered |
-| An `Agent` bean exists (this one or your own) | the `/agent` SSE endpoint is configured |
+| An `Agent` bean exists (this one or your own) | the `/agent` SSE endpoint is configured (Servlet `SseEmitter`) |
 
 Enable AG-UI **shared state** (the `update_state` tool and state events) with
 properties:
@@ -56,7 +62,6 @@ Agent agent(ChatClient.Builder builder) {
 }
 ```
 
-This starter is versioned on the **Spring AI 2.x** line. The Servlet (WebMVC)
-equivalent is
-[`ag-ui-spring-ai-webmvc-boot-starter`](../spring-ai-webmvc-boot-starter). See the
-[root README](../README.md) for the project overview.
+This starter is versioned on the **Spring AI 2.x** line. See the
+[root README](../README.md) for the project overview and the
+[`spring-ai`](../spring-ai) README for the agent's tool and generative-UI model.

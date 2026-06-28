@@ -14,17 +14,14 @@ import io.github.agui4j.core.event.ToolCallArgsEvent;
 import io.github.agui4j.core.event.ToolCallEndEvent;
 import io.github.agui4j.core.event.ToolCallStartEvent;
 import io.github.agui4j.core.message.Role;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
+import java.util.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.util.json.JsonParser;
+import org.springframework.ai.util.JsonHelper;
 
 /**
  * Translates a stream of Spring AI {@link ChatResponse} chunks into the AG-UI
@@ -55,6 +52,9 @@ import org.springframework.ai.util.json.JsonParser;
 final class SpringAiEventTranslator {
 
     private static final Logger log = LoggerFactory.getLogger(SpringAiEventTranslator.class);
+
+    /** Jackson-backed JSON helper; replaces the removed static {@code JsonParser}. */
+    private static final JsonHelper JSON = new JsonHelper();
 
     private enum Mode {
         NONE,
@@ -110,16 +110,16 @@ final class SpringAiEventTranslator {
      */
     List<Event> onChunk(ChatResponse response) {
         List<Event> events = new ArrayList<>();
-        if (response == null || response.getResult() == null) {
+        if (Objects.isNull(response) || Objects.isNull(response.getResult())) {
             return events;
         }
         AssistantMessage message = response.getResult().getOutput();
-        if (message == null) {
+        if (Objects.isNull(message)) {
             return events;
         }
 
         String text = message.getText();
-        if (text != null && !text.isEmpty()) {
+        if (Objects.nonNull(text) && !text.isEmpty()) {
             for (ReasoningSegmenter.Segment segment : segmenter.feed(text)) {
                 emitSegment(segment, events);
             }
@@ -150,9 +150,9 @@ final class SpringAiEventTranslator {
             events.add(new ToolCallEndEvent(id));
         }
         openToolCalls.clear();
-        if (stateToolCallId != null) {
+        if (Objects.nonNull(stateToolCallId)) {
             Object snapshot = parseStateSnapshot();
-            if (snapshot != null) {
+            if (Objects.nonNull(snapshot)) {
                 events.add(new StateSnapshotEvent(snapshot));
             } else {
                 log.debug("Ignoring state update; could not parse a state object from "
@@ -238,10 +238,10 @@ final class SpringAiEventTranslator {
         String name = toolCall.name();
         String arguments = toolCall.arguments();
 
-        if (name != null && !name.isEmpty()) {
+        if (Objects.nonNull(name) && !name.isEmpty()) {
             // Start of a tool call. Some providers (notably Ollama) omit the call
             // id; synthesize a stable one so the call is still tracked and emitted.
-            String callId = (id != null && !id.isEmpty()) ? id : syntheticToolCallId();
+            String callId = (Objects.nonNull(id) && !id.isEmpty()) ? id : syntheticToolCallId();
             if (startedToolCalls.add(callId)) {
                 if (isStateTool(name)) {
                     stateToolCallId = callId;
@@ -256,8 +256,8 @@ final class SpringAiEventTranslator {
         } else {
             // No name: an argument-delta continuation (the streaming pattern used by
             // OpenAI-style providers, where only the first chunk carries id + name).
-            String target = (id != null && !id.isEmpty()) ? id : currentToolCallId;
-            if (target != null) {
+            String target = (Objects.nonNull(id) && !id.isEmpty()) ? id : currentToolCallId;
+            if (Objects.nonNull(target)) {
                 currentToolCallId = target;
                 appendToolArguments(target, arguments, events);
             }
@@ -269,14 +269,14 @@ final class SpringAiEventTranslator {
     }
 
     private void appendToolArguments(String id, String arguments, List<Event> events) {
-        if (arguments == null || arguments.isEmpty()) {
+        if (Objects.isNull(arguments) || arguments.isEmpty()) {
             return;
         }
         if (id.equals(stateToolCallId)) {
             stateToolArguments.append(arguments);
         } else {
             ToolCallBuffer buffer = toolCallBuffers.get(id);
-            if (buffer != null) {
+            if (Objects.nonNull(buffer)) {
                 buffer.arguments.append(arguments);
             }
             events.add(new ToolCallArgsEvent(id, arguments));
@@ -304,7 +304,7 @@ final class SpringAiEventTranslator {
     }
 
     private boolean isStateTool(String name) {
-        return stateToolName != null && stateToolName.equals(name);
+        return Objects.nonNull(stateToolName) && stateToolName.equals(name);
     }
 
     /**
@@ -337,7 +337,7 @@ final class SpringAiEventTranslator {
 
     private static Object tryParseJson(String json) {
         try {
-            return JsonParser.fromJson(json, Object.class);
+            return JSON.fromJson(json, Object.class);
         } catch (RuntimeException e) {
             return null;
         }

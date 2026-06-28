@@ -42,6 +42,7 @@
         <module>spring-webmvc-boot-starter</module>
         <module>spring-ai</module>
         <module>spring-ai-spring-boot-starter</module>
+        <module>spring-ai-webmvc-boot-starter</module>
     </modules>
 
     <properties>
@@ -66,10 +67,10 @@
           (see the Versioning section of the README). Bump alongside each
           module's own <version>.
         -->
-        <ag-ui-spring-server-core.version>3.4.0-SNAPSHOT</ag-ui-spring-server-core.version>
-        <ag-ui-spring-webflux-server.version>3.4.0-SNAPSHOT</ag-ui-spring-webflux-server.version>
-        <ag-ui-spring-webmvc-server.version>3.4.0-SNAPSHOT</ag-ui-spring-webmvc-server.version>
-        <ag-ui-spring-ai.version>1.1.0-SNAPSHOT</ag-ui-spring-ai.version>
+        <ag-ui-spring-server-core.version>4.1.0-SNAPSHOT</ag-ui-spring-server-core.version>
+        <ag-ui-spring-webflux-server.version>4.1.0-SNAPSHOT</ag-ui-spring-webflux-server.version>
+        <ag-ui-spring-webmvc-server.version>4.1.0-SNAPSHOT</ag-ui-spring-webmvc-server.version>
+        <ag-ui-spring-ai.version>2.0.0-SNAPSHOT</ag-ui-spring-ai.version>
     </properties>
 
     <!--

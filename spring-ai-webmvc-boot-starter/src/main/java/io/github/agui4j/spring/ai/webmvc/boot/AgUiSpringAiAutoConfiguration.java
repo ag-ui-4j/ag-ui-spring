@@ -1,4 +1,4 @@
-package io.github.agui4j.spring.ai.boot;
+package io.github.agui4j.spring.ai.webmvc.boot;
 
 import io.github.agui4j.core.agent.Agent;
 import io.github.agui4j.spring.ai.SpringAiAgent;
@@ -12,18 +12,21 @@ import org.springframework.context.annotation.Bean;
 
 /**
  * Auto-configuration that adapts a Spring AI {@link ChatClient} into an AG-UI
- * {@link Agent}. When a {@link ChatClient.Builder} bean is present (Spring AI
- * auto-configures one whenever a chat model is on the classpath) and the
- * application has not defined its own {@code Agent}, it builds a default
- * {@link ChatClient} and registers a {@link SpringAiAgent}.
+ * {@link Agent}, for the Servlet (WebMVC) server. This is the WebMVC counterpart of
+ * {@code io.github.agui4j.spring.ai.boot.AgUiSpringAiAutoConfiguration} (WebFlux);
+ * the only difference is that it is ordered before the Servlet server
+ * auto-configuration. When a {@link ChatClient.Builder} bean is present (Spring AI
+ * auto-configures one whenever a chat model is on the classpath) and the application
+ * has not defined its own {@code Agent}, it builds a default {@link ChatClient} and
+ * registers a {@link SpringAiAgent}.
  *
  * <p>Ordering matters: it runs <em>after</em> Spring AI's
  * {@code ChatClientAutoConfiguration} (which registers the {@code ChatClient.Builder}
- * this configuration consumes)
- * (so the contributed agent exists when the server wires the AG-UI endpoint).
- * Together they expose a Spring AI model over AG-UI with no application code. To
- * customise the client (advisors, memory, default prompts, tools), define your
- * own {@code Agent} bean from a {@code ChatClient.Builder}.
+ * this configuration consumes) and <em>before</em> the WebMVC
+ * {@code AgUiServerAutoConfiguration} (so the contributed agent exists when the
+ * server wires the AG-UI endpoint). Together they expose a Spring AI model over
+ * AG-UI with no application code. To customise the client (advisors, memory, default
+ * prompts, tools), define your own {@code Agent} bean from a {@code ChatClient.Builder}.
  *
  * <p>Set {@code ag-ui.spring-ai.share-state=true} to enable AG-UI shared state
  * (the {@code update_state} tool and state events). With
@@ -32,7 +35,7 @@ import org.springframework.context.annotation.Bean;
  */
 @AutoConfiguration(
         afterName = "org.springframework.ai.model.chat.client.autoconfigure.ChatClientAutoConfiguration",
-        beforeName = "io.github.agui4j.spring.server.AgUiServerAutoConfiguration")
+        beforeName = "io.github.agui4j.spring.webmvc.AgUiServerAutoConfiguration")
 @ConditionalOnClass({ChatClient.class, SpringAiAgent.class})
 public class AgUiSpringAiAutoConfiguration {
 

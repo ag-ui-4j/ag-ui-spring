@@ -101,6 +101,6 @@ public class AgUiController {
 
     private static String describe(Throwable throwable) {
         String message = throwable.getMessage();
-        return message != null ? message : throwable.getClass().getSimpleName();
+        return Objects.nonNull(message) ? message : throwable.getClass().getSimpleName();
     }
 }

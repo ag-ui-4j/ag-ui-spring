@@ -23,7 +23,10 @@ import java.util.UUID;
 import java.util.concurrent.Flow;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import org.springframework.ai.chat.client.AdvisorParams;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.ToolCallingAdvisor;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.ToolResponseMessage;
 import org.springframework.ai.chat.model.ChatResponse;
@@ -34,7 +37,7 @@ import org.springframework.ai.model.tool.ToolCallingManager;
 import org.springframework.ai.model.tool.ToolExecutionResult;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.definition.ToolDefinition;
-import org.springframework.ai.util.json.JsonParser;
+import org.springframework.ai.util.JsonHelper;
 import reactor.adapter.JdkFlowAdapter;
 import reactor.core.publisher.Flux;
 
@@ -106,6 +109,9 @@ public final class SpringAiAgent implements Agent {
     /** Guards against runaway tool-call loops. */
     private static final int MAX_TOOL_ITERATIONS = 8;
 
+    /** Jackson-backed JSON helper; replaces the removed static {@code JsonParser}. */
+    private static final JsonHelper JSON = new JsonHelper();
+
     private final ChatClient chatClient;
     private final Supplier<String> messageIdGenerator;
     private final boolean shareState;
@@ -113,6 +119,15 @@ public final class SpringAiAgent implements Agent {
     private final StateUpdates stateUpdates;
     private final List<ToolCallback> backendTools;
     private final ToolCallingManager toolCallingManager = ToolCallingManager.builder().build();
+
+    // A tool advisor that injects the tool definitions into the request but never
+    // auto-executes (its eligibility checker is always false), so the agent drives its
+    // own tool loop (see continueAfterTurn). This replaces the removed Spring AI 1.x
+    // ToolCallingChatOptions.internalToolExecutionEnabled(false).
+    private final Advisor noExecuteToolAdvisor = ToolCallingAdvisor.builder()
+            .toolCallingManager(toolCallingManager)
+            .toolExecutionEligibilityChecker(response -> false)
+            .build();
 
     /**
      * Creates an agent over the given {@link ChatClient}, generating random message
@@ -158,7 +173,7 @@ public final class SpringAiAgent implements Agent {
      * @return the system-message text
      */
     private static String defaultStatePrompt(Object state) {
-        return "The current shared application state (JSON) is:\n" + JsonParser.toJson(state)
+        return "The current shared application state (JSON) is:\n" + JSON.toJson(state)
                 + "\nCall the '" + STATE_TOOL_NAME + "' tool with the complete new state to change it.";
     }
 
@@ -275,14 +290,14 @@ public final class SpringAiAgent implements Agent {
     @Override
     public Flow.Publisher<Event> run(RunAgentInput input) {
         Objects.requireNonNull(input, "input must not be null");
-        boolean stateAvailable = shareState && input.state() != null;
+        boolean stateAvailable = shareState && Objects.nonNull(input.state());
 
         List<org.springframework.ai.chat.messages.Message> baseMessages =
                 toSpringAiMessages(input.messages());
         if (stateAvailable) {
             // Give the model the current state so it can update it meaningfully.
             String prompt = statePrompt.apply(input.state());
-            if (prompt != null && !prompt.isBlank()) {
+            if (Objects.nonNull(prompt) && !prompt.isBlank()) {
                 baseMessages.add(0, new org.springframework.ai.chat.messages.SystemMessage(prompt));
             }
         }
@@ -352,7 +367,7 @@ public final class SpringAiAgent implements Agent {
                 ToolCallingChatOptions.builder().toolCallbacks(backendTools).build());
         ToolExecutionResult execution = toolCallingManager.executeToolCalls(executionPrompt, toolCallResponse);
 
-        List<Event> resultEvents = toToolResultEvents(execution, translator.messageId());
+        List<Event> resultEvents = toToolResultEvents(execution);
 
         if (calls.size() > backendCalls.size()) {
             // Option A: a client tool was also called this turn — surface the backend
@@ -372,18 +387,18 @@ public final class SpringAiAgent implements Agent {
                                       List<ToolCallback> advertised) {
         ChatClient.ChatClientRequestSpec spec = chatClient.prompt().messages(messages);
         if (!advertised.isEmpty()) {
-            // Advertise all tools but disable internal execution: the agent forwards
-            // client tools as events, intercepts the state tool, and executes backend
-            // tools itself (see continueAfterTurn).
-            spec = spec.toolCallbacks(advertised)
-                    .options(ToolCallingChatOptions.builder()
-                            .internalToolExecutionEnabled(false)
-                            .build());
+            // Advertise the tools (tools(Object...) replaces the deprecated toolCallbacks).
+            // Suppress the auto-registered ToolCallingAdvisor (which would execute the
+            // calls) and use our never-executing one instead, so the agent forwards client
+            // tools as events, intercepts the state tool, and runs backend tools itself.
+            spec = spec.tools(advertised.toArray())
+                    .advisors(AdvisorParams.toolCallingAdvisorAutoRegister(false))
+                    .advisors(noExecuteToolAdvisor);
         }
         return spec.stream().chatResponse();
     }
 
-    private static List<Event> toToolResultEvents(ToolExecutionResult execution, String messageId) {
+    private List<Event> toToolResultEvents(ToolExecutionResult execution) {
         List<org.springframework.ai.chat.messages.Message> history = execution.conversationHistory();
         if (history.isEmpty()
                 || !(history.get(history.size() - 1) instanceof ToolResponseMessage toolResponseMessage)) {
@@ -391,7 +406,12 @@ public final class SpringAiAgent implements Agent {
         }
         List<Event> events = new ArrayList<>();
         for (ToolResponseMessage.ToolResponse response : toolResponseMessage.getResponses()) {
-            events.add(new ToolCallResultEvent(messageId, response.id(), response.responseData()));
+            // Each tool result is its own conversation message: a fresh id (NOT the
+            // assistant turn's id) with role TOOL. Reusing the assistant message id makes
+            // the front end overwrite the assistant tool call - and any generative UI
+            // rendered from it - with the result, so the rendered component flickers away.
+            events.add(new ToolCallResultEvent(messageIdGenerator.get(), response.id(),
+                    response.responseData(), Role.TOOL, null, null));
         }
         return events;
     }
@@ -415,7 +435,7 @@ public final class SpringAiAgent implements Agent {
         ToolDefinition definition = ToolDefinition.builder()
                 .name(STATE_TOOL_NAME)
                 .description(STATE_TOOL_DESCRIPTION)
-                .inputSchema(JsonParser.toJson(Map.of(
+                .inputSchema(JSON.toJson(Map.of(
                         "type", "object",
                         "properties", Map.of("state",
                                 Map.of("type", "object", "description", "The complete new shared state")),
@@ -430,7 +450,7 @@ public final class SpringAiAgent implements Agent {
             ToolDefinition definition = ToolDefinition.builder()
                     .name(tool.name())
                     .description(tool.description())
-                    .inputSchema(JsonParser.toJson(toSchema(tool.parameters())))
+                    .inputSchema(JSON.toJson(toSchema(tool.parameters())))
                     .build();
             toolCallbacks.add(new AgUiToolCallback(definition));
         }
@@ -448,23 +468,52 @@ public final class SpringAiAgent implements Agent {
     private static List<org.springframework.ai.chat.messages.Message> toSpringAiMessages(
             List<Message> messages) {
         List<org.springframework.ai.chat.messages.Message> result = new ArrayList<>();
+        // A tool result references only its call id; remember each call's function name
+        // from the assistant turn so the tool-response message can be labelled with it.
+        Map<String, String> toolCallNames = new java.util.HashMap<>();
         for (Message message : messages) {
-            String content = message.content() != null ? message.content() : "";
+            String content = Objects.nonNull(message.content()) ? message.content() : "";
             Role role = message.role();
-            if (role == Role.USER) {
+            if (message instanceof io.github.agui4j.core.message.AssistantMessage assistant
+                    && Objects.nonNull(assistant.toolCalls()) && !assistant.toolCalls().isEmpty()) {
+                // Preserve the assistant's tool calls. Without them the model never sees
+                // that it already invoked the tool and keeps re-calling it in a loop
+                // (e.g. a client-side setThemeColor fired on every turn).
+                List<org.springframework.ai.chat.messages.AssistantMessage.ToolCall> calls = new ArrayList<>();
+                for (io.github.agui4j.core.message.ToolCall toolCall : assistant.toolCalls()) {
+                    io.github.agui4j.core.message.FunctionCall function = toolCall.function();
+                    String name = Objects.nonNull(function) ? function.name() : "";
+                    String arguments = Objects.nonNull(function) ? function.arguments() : "";
+                    toolCallNames.put(toolCall.id(), name);
+                    calls.add(new org.springframework.ai.chat.messages.AssistantMessage.ToolCall(
+                            toolCall.id(), toolCall.type(), name, arguments));
+                }
+                result.add(org.springframework.ai.chat.messages.AssistantMessage.builder()
+                        .content(content)
+                        .toolCalls(calls)
+                        .build());
+            } else if (message instanceof io.github.agui4j.core.message.ToolMessage toolMessage) {
+                // Feed the result back as a proper tool response linked to the call id, so
+                // the model treats that call as completed rather than requesting it again.
+                String name = toolCallNames.getOrDefault(toolMessage.toolCallId(), "");
+                result.add(org.springframework.ai.chat.messages.ToolResponseMessage.builder()
+                        .responses(List.of(
+                                new org.springframework.ai.chat.messages.ToolResponseMessage.ToolResponse(
+                                        toolMessage.toolCallId(), name, content)))
+                        .build());
+            } else if (role == Role.USER) {
                 result.add(new org.springframework.ai.chat.messages.UserMessage(content));
             } else if (role == Role.ASSISTANT) {
                 result.add(new org.springframework.ai.chat.messages.AssistantMessage(content));
             } else if (role == Role.SYSTEM || role == Role.DEVELOPER) {
                 result.add(new org.springframework.ai.chat.messages.SystemMessage(content));
             }
-            // TOOL messages are not mapped to a prompt message in this baseline adapter.
         }
         return result;
     }
 
     private static String describe(Throwable throwable) {
         String message = throwable.getMessage();
-        return message != null ? message : throwable.getClass().getSimpleName();
+        return Objects.nonNull(message) ? message : throwable.getClass().getSimpleName();
     }
 }

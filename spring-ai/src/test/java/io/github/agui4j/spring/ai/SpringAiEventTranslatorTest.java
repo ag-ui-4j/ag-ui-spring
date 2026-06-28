@@ -14,6 +14,8 @@ import io.github.agui4j.core.event.ToolCallStartEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.model.ChatResponse;
@@ -89,7 +91,7 @@ class SpringAiEventTranslatorTest {
         ToolCallStartEvent start = assertInstanceOf(ToolCallStartEvent.class, events.get(0));
         assertEquals("get_weather", start.toolCallName());
         assertEquals("msg-1", start.parentMessageId());
-        assertTrue(start.toolCallId() != null && !start.toolCallId().isEmpty(), "synthesized id");
+        assertTrue(Objects.nonNull(start.toolCallId()) && !start.toolCallId().isEmpty(), "synthesized id");
 
         ToolCallArgsEvent args = assertInstanceOf(ToolCallArgsEvent.class, events.get(1));
         assertEquals(start.toolCallId(), args.toolCallId());

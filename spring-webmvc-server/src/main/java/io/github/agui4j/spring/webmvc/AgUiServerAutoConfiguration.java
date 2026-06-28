@@ -6,6 +6,8 @@ import io.github.agui4j.core.serialization.Serializer;
 import io.github.agui4j.server.AgentRegistry;
 import io.github.agui4j.spring.server.core.JacksonSerializer;
 import java.util.Map;
+import java.util.Objects;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -33,7 +35,7 @@ public class AgUiServerAutoConfiguration {
     @ConditionalOnMissingBean(Serializer.class)
     public Serializer agUiSerializer(ObjectProvider<ObjectMapper> objectMapper) {
         ObjectMapper mapper = objectMapper.getIfAvailable();
-        return mapper != null ? new JacksonSerializer(mapper) : new JacksonSerializer();
+        return Objects.nonNull(mapper) ? new JacksonSerializer(mapper) : new JacksonSerializer();
     }
 
     @Bean
