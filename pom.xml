@@ -60,6 +60,12 @@
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <!-- Do not run analysis on test sources (no issues raised on test code). -->
         <sonar.test.exclusions>**/*</sonar.test.exclusions>
+        <!-- The WebFlux and WebMVC servers are deliberately parallel implementations of
+             the same endpoint (reactive vs Servlet); their controller and
+             auto-configuration mirror each other by design. Exclude them from
+             copy-paste detection rather than couple the Spring-free server-core to a
+             web stack. -->
+        <sonar.cpd.exclusions>**/AgUiController.java,**/AgUiServerAutoConfiguration.java</sonar.cpd.exclusions>
 
         <!--
           Internal module versions are managed here rather than via
