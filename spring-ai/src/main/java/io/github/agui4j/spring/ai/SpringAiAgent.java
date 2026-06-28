@@ -472,44 +472,69 @@ public final class SpringAiAgent implements Agent {
         // from the assistant turn so the tool-response message can be labelled with it.
         Map<String, String> toolCallNames = new java.util.HashMap<>();
         for (Message message : messages) {
-            String content = Objects.nonNull(message.content()) ? message.content() : "";
-            Role role = message.role();
-            if (message instanceof io.github.agui4j.core.message.AssistantMessage assistant
-                    && Objects.nonNull(assistant.toolCalls()) && !assistant.toolCalls().isEmpty()) {
-                // Preserve the assistant's tool calls. Without them the model never sees
-                // that it already invoked the tool and keeps re-calling it in a loop
-                // (e.g. a client-side setThemeColor fired on every turn).
-                List<org.springframework.ai.chat.messages.AssistantMessage.ToolCall> calls = new ArrayList<>();
-                for (io.github.agui4j.core.message.ToolCall toolCall : assistant.toolCalls()) {
-                    io.github.agui4j.core.message.FunctionCall function = toolCall.function();
-                    String name = Objects.nonNull(function) ? function.name() : "";
-                    String arguments = Objects.nonNull(function) ? function.arguments() : "";
-                    toolCallNames.put(toolCall.id(), name);
-                    calls.add(new org.springframework.ai.chat.messages.AssistantMessage.ToolCall(
-                            toolCall.id(), toolCall.type(), name, arguments));
-                }
-                result.add(org.springframework.ai.chat.messages.AssistantMessage.builder()
-                        .content(content)
-                        .toolCalls(calls)
-                        .build());
-            } else if (message instanceof io.github.agui4j.core.message.ToolMessage toolMessage) {
-                // Feed the result back as a proper tool response linked to the call id, so
-                // the model treats that call as completed rather than requesting it again.
-                String name = toolCallNames.getOrDefault(toolMessage.toolCallId(), "");
-                result.add(org.springframework.ai.chat.messages.ToolResponseMessage.builder()
-                        .responses(List.of(
-                                new org.springframework.ai.chat.messages.ToolResponseMessage.ToolResponse(
-                                        toolMessage.toolCallId(), name, content)))
-                        .build());
-            } else if (role == Role.USER) {
-                result.add(new org.springframework.ai.chat.messages.UserMessage(content));
-            } else if (role == Role.ASSISTANT) {
-                result.add(new org.springframework.ai.chat.messages.AssistantMessage(content));
-            } else if (role == Role.SYSTEM || role == Role.DEVELOPER) {
-                result.add(new org.springframework.ai.chat.messages.SystemMessage(content));
+            org.springframework.ai.chat.messages.Message converted =
+                    toSpringAiMessage(message, toolCallNames);
+            if (Objects.nonNull(converted)) {
+                result.add(converted);
             }
         }
         return result;
+    }
+
+    private static org.springframework.ai.chat.messages.Message toSpringAiMessage(
+            Message message, Map<String, String> toolCallNames) {
+        String content = Objects.nonNull(message.content()) ? message.content() : "";
+        if (message instanceof io.github.agui4j.core.message.AssistantMessage assistant
+                && hasToolCalls(assistant)) {
+            // Preserve the assistant's tool calls. Without them the model never sees that
+            // it already invoked the tool and keeps re-calling it in a loop (e.g. a
+            // client-side setThemeColor fired on every turn).
+            return toAssistantWithToolCalls(assistant, content, toolCallNames);
+        }
+        if (message instanceof io.github.agui4j.core.message.ToolMessage toolMessage) {
+            // Feed the result back as a proper tool response linked to the call id, so the
+            // model treats that call as completed rather than requesting it again.
+            return toToolResponse(toolMessage, content, toolCallNames);
+        }
+        return switch (message.role()) {
+            case USER -> new org.springframework.ai.chat.messages.UserMessage(content);
+            case ASSISTANT -> new org.springframework.ai.chat.messages.AssistantMessage(content);
+            case SYSTEM, DEVELOPER -> new org.springframework.ai.chat.messages.SystemMessage(content);
+            default -> null;
+        };
+    }
+
+    private static boolean hasToolCalls(io.github.agui4j.core.message.AssistantMessage assistant) {
+        return Objects.nonNull(assistant.toolCalls()) && !assistant.toolCalls().isEmpty();
+    }
+
+    private static org.springframework.ai.chat.messages.AssistantMessage toAssistantWithToolCalls(
+            io.github.agui4j.core.message.AssistantMessage assistant, String content,
+            Map<String, String> toolCallNames) {
+        List<org.springframework.ai.chat.messages.AssistantMessage.ToolCall> calls = new ArrayList<>();
+        for (io.github.agui4j.core.message.ToolCall toolCall : assistant.toolCalls()) {
+            io.github.agui4j.core.message.FunctionCall function = toolCall.function();
+            String name = Objects.nonNull(function) ? function.name() : "";
+            String arguments = Objects.nonNull(function) ? function.arguments() : "";
+            toolCallNames.put(toolCall.id(), name);
+            calls.add(new org.springframework.ai.chat.messages.AssistantMessage.ToolCall(
+                    toolCall.id(), toolCall.type(), name, arguments));
+        }
+        return org.springframework.ai.chat.messages.AssistantMessage.builder()
+                .content(content)
+                .toolCalls(calls)
+                .build();
+    }
+
+    private static org.springframework.ai.chat.messages.ToolResponseMessage toToolResponse(
+            io.github.agui4j.core.message.ToolMessage toolMessage, String content,
+            Map<String, String> toolCallNames) {
+        String name = toolCallNames.getOrDefault(toolMessage.toolCallId(), "");
+        return org.springframework.ai.chat.messages.ToolResponseMessage.builder()
+                .responses(List.of(
+                        new org.springframework.ai.chat.messages.ToolResponseMessage.ToolResponse(
+                                toolMessage.toolCallId(), name, content)))
+                .build();
     }
 
     private static String describe(Throwable throwable) {
