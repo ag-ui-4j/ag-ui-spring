@@ -114,9 +114,6 @@ final class SpringAiEventTranslator {
             return events;
         }
         AssistantMessage message = response.getResult().getOutput();
-        if (Objects.isNull(message)) {
-            return events;
-        }
 
         String text = message.getText();
         if (Objects.nonNull(text) && !text.isEmpty()) {
