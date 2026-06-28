@@ -53,7 +53,7 @@ final class SpringAiEventTranslator {
 
     private static final Logger log = LoggerFactory.getLogger(SpringAiEventTranslator.class);
 
-    /** Jackson-backed JSON helper; replaces the removed static {@code JsonParser}. */
+    /** Jackson-backed JSON parser for tool-call and state payloads. */
     private static final JsonHelper JSON = new JsonHelper();
 
     private enum Mode {

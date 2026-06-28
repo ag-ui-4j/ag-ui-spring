@@ -48,8 +48,7 @@
         <!--
           The WebFlux AG-UI server: provides the auto-configured /agent SSE endpoint
           (AgUiServerAutoConfiguration) and, via spring-boot-starter-webflux, the
-          embedded reactive web server. Without this the app has no server and exits
-          on startup.
+          embedded reactive web server.
         -->
         <dependency>
             <groupId>io.github.ag-ui-4j</groupId>

@@ -49,7 +49,7 @@
         <!--
           The Servlet (WebMVC) AG-UI server: provides the auto-configured /agent SSE
           endpoint (SseEmitter-backed) and, via spring-boot-starter-web, the embedded
-          servlet web server. Without this the app has no server and exits on startup.
+          servlet web server.
         -->
         <dependency>
             <groupId>io.github.ag-ui-4j</groupId>

@@ -109,7 +109,7 @@ public final class SpringAiAgent implements Agent {
     /** Guards against runaway tool-call loops. */
     private static final int MAX_TOOL_ITERATIONS = 8;
 
-    /** Jackson-backed JSON helper; replaces the removed static {@code JsonParser}. */
+    /** Jackson-backed JSON serializer for tool schemas and shared state. */
     private static final JsonHelper JSON = new JsonHelper();
 
     private final ChatClient chatClient;
@@ -121,9 +121,8 @@ public final class SpringAiAgent implements Agent {
     private final ToolCallingManager toolCallingManager = ToolCallingManager.builder().build();
 
     // A tool advisor that injects the tool definitions into the request but never
-    // auto-executes (its eligibility checker is always false), so the agent drives its
-    // own tool loop (see continueAfterTurn). This replaces the removed Spring AI 1.x
-    // ToolCallingChatOptions.internalToolExecutionEnabled(false).
+    // auto-executes (its eligibility checker always returns false), so the agent drives
+    // its own tool loop (see continueAfterTurn).
     private final Advisor noExecuteToolAdvisor = ToolCallingAdvisor.builder()
             .toolCallingManager(toolCallingManager)
             .toolExecutionEligibilityChecker(response -> false)
@@ -387,10 +386,10 @@ public final class SpringAiAgent implements Agent {
                                       List<ToolCallback> advertised) {
         ChatClient.ChatClientRequestSpec spec = chatClient.prompt().messages(messages);
         if (!advertised.isEmpty()) {
-            // Advertise the tools (tools(Object...) replaces the deprecated toolCallbacks).
-            // Suppress the auto-registered ToolCallingAdvisor (which would execute the
-            // calls) and use our never-executing one instead, so the agent forwards client
-            // tools as events, intercepts the state tool, and runs backend tools itself.
+            // Advertise the tools, but suppress the auto-registered ToolCallingAdvisor
+            // (which would execute the calls) in favour of our never-executing one, so the
+            // agent forwards client tools as events, intercepts the state tool, and runs
+            // backend tools itself.
             spec = spec.tools(advertised.toArray())
                     .advisors(AdvisorParams.toolCallingAdvisorAutoRegister(false))
                     .advisors(noExecuteToolAdvisor);
@@ -406,10 +405,10 @@ public final class SpringAiAgent implements Agent {
         }
         List<Event> events = new ArrayList<>();
         for (ToolResponseMessage.ToolResponse response : toolResponseMessage.getResponses()) {
-            // Each tool result is its own conversation message: a fresh id (NOT the
-            // assistant turn's id) with role TOOL. Reusing the assistant message id makes
-            // the front end overwrite the assistant tool call - and any generative UI
-            // rendered from it - with the result, so the rendered component flickers away.
+            // Each tool result is its own conversation message: a fresh id (distinct from
+            // the assistant turn) with role TOOL, so the front end keeps the assistant tool
+            // call - and any generative UI rendered from it - alongside the result rather
+            // than overwriting it.
             events.add(new ToolCallResultEvent(messageIdGenerator.get(), response.id(),
                     response.responseData(), Role.TOOL, null, null));
         }
@@ -486,9 +485,8 @@ public final class SpringAiAgent implements Agent {
         String content = Objects.nonNull(message.content()) ? message.content() : "";
         if (message instanceof io.github.agui4j.core.message.AssistantMessage assistant
                 && hasToolCalls(assistant)) {
-            // Preserve the assistant's tool calls. Without them the model never sees that
-            // it already invoked the tool and keeps re-calling it in a loop (e.g. a
-            // client-side setThemeColor fired on every turn).
+            // Preserve the assistant's tool calls so the model sees the calls it has
+            // already made and does not repeat them on the next turn.
             return toAssistantWithToolCalls(assistant, content, toolCallNames);
         }
         if (message instanceof io.github.agui4j.core.message.ToolMessage toolMessage) {
