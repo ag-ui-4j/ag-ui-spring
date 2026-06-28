@@ -12,14 +12,14 @@
 
     <artifactId>ag-ui-spring-ai-spring-boot-starter</artifactId>
     <!-- Tracks the Spring AI line, like the spring-ai module it bundles. -->
-    <version>1.1.0-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
 
     <name>ag-ui-spring-ai-spring-boot-starter</name>
     <description>Spring Boot starter that exposes a Spring AI ChatModel as an AG-UI agent</description>
 
     <properties>
         <!-- Spring Boot autoconfigure used by this starter's auto-configuration. -->
-        <spring-boot.version>3.4.2</spring-boot.version>
+        <spring-boot.version>4.1.0</spring-boot.version>
     </properties>
 
     <dependencyManagement>
@@ -45,13 +45,24 @@
             <groupId>io.github.ag-ui-4j</groupId>
             <artifactId>ag-ui-spring-ai</artifactId>
         </dependency>
+        <!--
+          The WebFlux AG-UI server: provides the auto-configured /agent SSE endpoint
+          (AgUiServerAutoConfiguration) and, via spring-boot-starter-webflux, the
+          embedded reactive web server.
+        -->
         <dependency>
             <groupId>io.github.ag-ui-4j</groupId>
-            <artifactId>ag-ui-spring-server</artifactId>
+            <artifactId>ag-ui-spring-webflux-server</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

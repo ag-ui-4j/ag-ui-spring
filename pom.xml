@@ -35,10 +35,14 @@
     </scm>
 
     <modules>
-        <module>spring-server</module>
-        <module>spring-boot-starter</module>
+        <module>spring-server-core</module>
+        <module>spring-webflux-server</module>
+        <module>spring-webmvc-server</module>
+        <module>spring-webflux-boot-starter</module>
+        <module>spring-webmvc-boot-starter</module>
         <module>spring-ai</module>
         <module>spring-ai-spring-boot-starter</module>
+        <module>spring-ai-webmvc-boot-starter</module>
     </modules>
 
     <properties>
@@ -56,6 +60,12 @@
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <!-- Do not run analysis on test sources (no issues raised on test code). -->
         <sonar.test.exclusions>**/*</sonar.test.exclusions>
+        <!-- The WebFlux and WebMVC servers are deliberately parallel implementations of
+             the same endpoint (reactive vs Servlet); their controller and
+             auto-configuration mirror each other by design. Exclude them from
+             copy-paste detection rather than couple the Spring-free server-core to a
+             web stack. -->
+        <sonar.cpd.exclusions>**/AgUiController.java,**/AgUiServerAutoConfiguration.java</sonar.cpd.exclusions>
 
         <!--
           Internal module versions are managed here rather than via
@@ -63,8 +73,10 @@
           (see the Versioning section of the README). Bump alongside each
           module's own <version>.
         -->
-        <ag-ui-spring-server.version>3.4.0-SNAPSHOT</ag-ui-spring-server.version>
-        <ag-ui-spring-ai.version>1.1.0-SNAPSHOT</ag-ui-spring-ai.version>
+        <ag-ui-spring-server-core.version>4.1.0-SNAPSHOT</ag-ui-spring-server-core.version>
+        <ag-ui-spring-webflux-server.version>4.1.0-SNAPSHOT</ag-ui-spring-webflux-server.version>
+        <ag-ui-spring-webmvc-server.version>4.1.0-SNAPSHOT</ag-ui-spring-webmvc-server.version>
+        <ag-ui-spring-ai.version>2.0.0-SNAPSHOT</ag-ui-spring-ai.version>
     </properties>
 
     <!--
@@ -95,8 +107,18 @@
             <!-- Internal modules (independently versioned). -->
             <dependency>
                 <groupId>io.github.ag-ui-4j</groupId>
-                <artifactId>ag-ui-spring-server</artifactId>
-                <version>${ag-ui-spring-server.version}</version>
+                <artifactId>ag-ui-spring-server-core</artifactId>
+                <version>${ag-ui-spring-server-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.ag-ui-4j</groupId>
+                <artifactId>ag-ui-spring-webflux-server</artifactId>
+                <version>${ag-ui-spring-webflux-server.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.ag-ui-4j</groupId>
+                <artifactId>ag-ui-spring-webmvc-server</artifactId>
+                <version>${ag-ui-spring-webmvc-server.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.github.ag-ui-4j</groupId>

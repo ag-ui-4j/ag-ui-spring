@@ -62,6 +62,19 @@ the first chunk carrying an id (or a name) opens the call, later chunks append
 argument deltas. Providers that omit the id (e.g. Ollama) get a synthesized one.
 Any open text message is closed before a tool call starts.
 
+**Conversation history**: on the next turn the front end sends back the prior
+assistant message (with its tool calls) and the `tool` result messages. The agent
+reconstructs these as Spring AI `AssistantMessage` (carrying the `ToolCall`s) and
+`ToolResponseMessage` — so the model sees that a client tool it requested has
+already run and responds, instead of re-issuing the same call every turn.
+
+**Generative UI**: each `TOOL_CALL_RESULT` is emitted as its **own** conversation
+message — a fresh `messageId` (distinct from the assistant turn that made the call)
+with `role: tool`. Front ends such as CopilotKit key messages by id, so reusing the
+assistant message id would overwrite the assistant tool call — and any generative UI
+rendered from it — with the result. Keeping the result a separate message lets the
+rendered component persist alongside the follow-up text.
+
 **State** (opt-in) syncs AG-UI [shared state](https://docs.ag-ui.com/concepts/state).
 When enabled the agent:
 
@@ -104,11 +117,13 @@ Agent agent = SpringAiAgent.builder(chatClient)
         .build();
 ```
 
-Combine with `ag-ui-spring-server` to expose it over HTTP. The
-[`ag-ui-spring-ai-spring-boot-starter`](../spring-ai-spring-boot-starter) does this
-automatically from the auto-configured `ChatClient.Builder`; to customise the
-client, define the `Agent` bean yourself (which overrides the auto-configured
-one):
+Combine with `ag-ui-spring-webflux-server` (reactive) or
+`ag-ui-spring-webmvc-server` (servlet) to expose it over HTTP. The
+[`ag-ui-spring-ai-spring-boot-starter`](../spring-ai-spring-boot-starter) (WebFlux)
+and [`ag-ui-spring-ai-webmvc-boot-starter`](../spring-ai-webmvc-boot-starter)
+(Servlet) do this automatically from the auto-configured `ChatClient.Builder`; to
+customise the client, define the `Agent` bean yourself (which overrides the
+auto-configured one):
 
 ```java
 @Bean
@@ -123,9 +138,9 @@ Advertises the **input tools** to the model and maps streamed **text**,
 **reasoning** (`<think>` tags), **tool calls** and — when state sharing is
 enabled — **shared state** (`STATE_SNAPSHOT` or `STATE_DELTA`) to AG-UI events.
 
-`MESSAGES_SNAPSHOT` is not yet emitted. Tool-call **results**
-(`TOOL_CALL_RESULT`) are produced by the side executing the tool, not by this
-streaming adapter.
+`MESSAGES_SNAPSHOT` is not yet emitted. `TOOL_CALL_RESULT` is emitted for
+**backend** tools (which the agent executes); **client** tool results are produced
+by the front end that runs the tool.
 
 ## Dependency
 
@@ -133,9 +148,9 @@ streaming adapter.
 <dependency>
     <groupId>io.github.ag-ui-4j</groupId>
     <artifactId>ag-ui-spring-ai</artifactId>
-    <version>1.1.0-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
 </dependency>
 ```
 
-> This module is versioned independently and tracks the **Spring AI 1.1.x** line
+> This module is versioned independently and tracks the **Spring AI 2.x** line
 > it targets. See the [root README](../README.md) for the project overview.

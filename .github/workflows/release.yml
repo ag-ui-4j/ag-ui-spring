@@ -1,10 +1,12 @@
 name: Release
 
 # Per-module release. Each independently-versioned line is published on its own
-# tag, so spring-server and spring-ai release on separate cadences:
+# tag, so the server and spring-ai lines release on separate cadences:
 #
-#   spring-server-v3.4.0  -> ag-ui-spring-server + ag-ui-spring-boot-starter
-#   spring-ai-v1.1.0      -> ag-ui-spring-ai     + ag-ui-spring-ai-spring-boot-starter
+#   spring-server-core-v3.4.0    -> ag-ui-spring-server-core
+#   spring-webflux-server-v3.4.0 -> ag-ui-spring-webflux-server + ag-ui-spring-webflux-boot-starter
+#   spring-webmvc-server-v3.4.0  -> ag-ui-spring-webmvc-server + ag-ui-spring-webmvc-boot-starter
+#   spring-ai-v1.1.0             -> ag-ui-spring-ai + ag-ui-spring-ai-spring-boot-starter
 #
 # Prerequisites:
 #   - The ag-ui artifacts must be available on Maven Central (a non-SNAPSHOT
@@ -12,13 +14,17 @@ name: Release
 #     Update <ag-ui.version> accordingly.
 #   - The modules being released must carry release (non-SNAPSHOT) versions at the
 #     tagged commit.
-#   - Because ag-ui-spring-ai-spring-boot-starter depends on ag-ui-spring-server,
-#     release the spring-server line before (or together with) the spring-ai line
+#   - Because both server lines depend on ag-ui-spring-server-core, release the
+#     spring-server-core line first so that dependency resolves from Central.
+#   - Because ag-ui-spring-ai-spring-boot-starter depends on ag-ui-spring-webflux-server,
+#     release the webflux-server line before (or together with) the spring-ai line
 #     so the dependency resolves from Central.
 on:
   push:
     tags:
-      - 'spring-server-v*'
+      - 'spring-server-core-v*'
+      - 'spring-webflux-server-v*'
+      - 'spring-webmvc-server-v*'
       - 'spring-ai-v*'
 
 jobs:
@@ -34,8 +40,12 @@ jobs:
         id: select
         run: |
           case "${GITHUB_REF_NAME}" in
-            spring-server-v*)
-              echo "projects=spring-server,spring-boot-starter" >> "$GITHUB_OUTPUT" ;;
+            spring-server-core-v*)
+              echo "projects=spring-server-core" >> "$GITHUB_OUTPUT" ;;
+            spring-webflux-server-v*)
+              echo "projects=spring-webflux-server,spring-webflux-boot-starter" >> "$GITHUB_OUTPUT" ;;
+            spring-webmvc-server-v*)
+              echo "projects=spring-webmvc-server,spring-webmvc-boot-starter" >> "$GITHUB_OUTPUT" ;;
             spring-ai-v*)
               echo "projects=spring-ai,spring-ai-spring-boot-starter" >> "$GITHUB_OUTPUT" ;;
             *)
