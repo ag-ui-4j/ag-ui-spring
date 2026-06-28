@@ -235,10 +235,10 @@ final class SpringAiEventTranslator {
         String name = toolCall.name();
         String arguments = toolCall.arguments();
 
-        if (Objects.nonNull(name) && !name.isEmpty()) {
+        if (isPresent(name)) {
             // Start of a tool call. Some providers (notably Ollama) omit the call
             // id; synthesize a stable one so the call is still tracked and emitted.
-            String callId = (Objects.nonNull(id) && !id.isEmpty()) ? id : syntheticToolCallId();
+            String callId = isPresent(id) ? id : syntheticToolCallId();
             if (startedToolCalls.add(callId)) {
                 if (isStateTool(name)) {
                     stateToolCallId = callId;
@@ -253,12 +253,16 @@ final class SpringAiEventTranslator {
         } else {
             // No name: an argument-delta continuation (the streaming pattern used by
             // OpenAI-style providers, where only the first chunk carries id + name).
-            String target = (Objects.nonNull(id) && !id.isEmpty()) ? id : currentToolCallId;
+            String target = isPresent(id) ? id : currentToolCallId;
             if (Objects.nonNull(target)) {
                 currentToolCallId = target;
                 appendToolArguments(target, arguments, events);
             }
         }
+    }
+
+    private static boolean isPresent(String value) {
+        return Objects.nonNull(value) && !value.isEmpty();
     }
 
     private String syntheticToolCallId() {
